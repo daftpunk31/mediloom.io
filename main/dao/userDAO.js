@@ -89,6 +89,11 @@ class UserDAO {
         const result = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
         return result.rows[0]; // Returns user object if found
     }
+
+    static async getCivilianByAadhar(aadhar) {
+        const result = await pool.query('SELECT * FROM users WHERE aadhar = $1', [aadhar]);
+        return result.rows[0]; // Returns user object if found
+    }
 }
 
 export default UserDAO;

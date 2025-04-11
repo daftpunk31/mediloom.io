@@ -67,7 +67,12 @@ const Loginpage = () => {
                 // Store token in localStorage
                 localStorage.setItem('token', response.data.token);
                 // Redirect based on role
+                if (formData.role === "Doctor/Medical Professional") {
+                    window.location.href = `/doctor`;
+                }
+                else{
                 window.location.href = `/${formData.role.toLowerCase().replace(/\s+/g, '')}`;
+                }
             } else {
                 setError(response.data.message || "Login failed");
             }
