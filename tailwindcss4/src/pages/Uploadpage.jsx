@@ -2,6 +2,8 @@ import React, { useState, useRef } from "react";
 import GSAPcomponent from "../components/GSAPcomponent";
 import Header from "../components/Header";
 import Fotter from "../components/Fotter";
+import axios from "axios";
+import config from '../urlConfig.js';
 function Uploadpage() {
   const [showForm, setShowForm] = useState(false);
   const [prescriptionFiles, setPrescriptionFiles] = useState([]);

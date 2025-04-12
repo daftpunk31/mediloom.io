@@ -62,6 +62,7 @@ export const loginUser = async (req, res) => {
         const email = req.body.email;
         const password = req.body.password;
         const role = req.body.role;
+        const hospitalID = req.body.hospitalID;
 
         // console.log('email:', email);
         // console.log('password:', password);
@@ -86,7 +87,8 @@ export const loginUser = async (req, res) => {
 
         req.session.user = user; // Store user ID in session
         req.session.user.role = role; // Store user role in session
-        // console.log('Session details:', req.session);
+        req.session.user.hospitalID = hospitalID; // Store user role in session
+        console.log('Session details:', req.session);
 
         // console.log('SessionID:', req.sessionID);
 
@@ -170,7 +172,7 @@ export const sendOtpMessage = async (req, res) => {
         // console.log('Person details:', req.session.user);
         // console.log('Request body apt:', req.body.apt);
         // console.log('Session ID:', req.sessionID);
-        // console.log('Session details:', req.session);
+        console.log('Session details:', req.session);
         // console.log('Session user details:', req.session.user);
         if(req.session.user.role =="Doctor/Medical Professional"){
             const aadhar = req.body.aadharNumber;
@@ -186,6 +188,16 @@ export const sendOtpMessage = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Paitent Not Registered' })
             // return res.redirect('errorDisplay'); // Redirect to the registration page
         }
+        if (!req.session.patient_detials) {
+            req.session.patient_detials = {}; // Initialize the object if it doesn't exist
+        }
+        
+        req.session.patient_detials.first_name = existingCivilian.first_name;
+        req.session.patient_detials.aadhar = existingCivilian.aadhar;
+        req.session.patient_detials.phone = existingCivilian.phone;
+        req.session.patient_detials.email = existingCivilian.email;
+        
+        console.log('Patient details:', req.session.patient_detials);
 
         // console.log('Existing civilian:', existingCivilian);
         
@@ -224,6 +236,16 @@ export const sendOtpMessage = async (req, res) => {
                 req.session.message = "This Phone number is not registered with us. Please  to register with us first.";
                 return res.status(404).json({ success: false, message: 'Paitent Not Registered' })
             }
+            if (!req.session.patient_detials) {
+                req.session.patient_detials = {}; // Initialize the object if it doesn't exist
+            }
+            
+            req.session.patient_detials.first_name = existingCivilian.first_name;
+            req.session.patient_detials.aadhar = existingCivilian.aadhar;
+            req.session.patient_detials.phone = existingCivilian.phone;
+            req.session.patient_detials.email = existingCivilian.email;
+            
+            console.log('Patient details:', req.session.patient_detials);
             const otp = generateSecureSixDigit(); // Store OTP in session
             req.session.otp = otp;
             req.session.save((err) => {
@@ -248,7 +270,7 @@ export const sendOtpMessage = async (req, res) => {
     }
 };
 
-export const verifyOtp = (req, res) => {
+export const verifyOtp = async (req, res) => {
     try {
         // Combine the OTP inputs from the request body
         const userOtp = req.body.otp;
@@ -277,3 +299,61 @@ export const verifyOtp = (req, res) => {
         return res.status(500).json({ success:false, message: "Error during verifying OTP", error: error.message });
     }
 };
+
+export const documentsInfoFetch = async (req, res) => {
+    try {
+        const patientAadhar = req.session.patient_detials.aadhar;
+
+        const records = await UserDAO.fetchDocumentsINFObyAadhar(patientAadhar);
+
+        // console.log('Files', records);
+
+        const filteredRecords = records.map(record => ({
+            id: record.record_id,
+            type: record.type,
+            name: record.file_name
+        }));
+        
+        return res.status(200).json({ success: true, message: 'Documents fetched successfully', documents: filteredRecords });
+    }
+    catch (error) {
+        console.error("Error fetching documents:", error);
+        return res.status(500).json({ success: false, message: 'Error fetching documents' });
+
+    }
+}
+
+export const documentFetch = async (req, res) => {
+    try{
+        // console.log('Request Params:', req.params); // Debugging
+        const {fileId} = req.params;
+        if (!fileId) {
+            console.error('File ID is missing');
+            return res.status(400).json({ success: false, message: 'File ID is required' });
+        }
+        // console.log('File ID:', fileId);
+        const aadhar = req.session.patient_detials.aadhar;
+        // console.log('Aadhar:', aadhar);
+
+        const result = await UserDAO.fetchDocument(fileId,aadhar);
+
+        if (!result) {
+            console.error('Document not found');
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+
+        const documentData = {
+            location: result.file_location,
+            name: result.file_name,
+            type: result.type,
+        };
+
+        // console.log('Document data:', documentData);
+
+        return res.status(200).json({ success: true, message: 'Document fetched successfully', document: documentData });
+    }
+    catch{
+        return res.status(500).json({ success: false, message: 'Error fetching document' });
+
+    }
+}

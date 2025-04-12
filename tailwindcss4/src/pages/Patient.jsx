@@ -111,7 +111,11 @@ function Patient() {
         try {
             setLoading(true);
             setError("");
-            const response = await axios.get('/api/patient/documents');
+            const response = await axios.get(`${config.backendUrl}/api/dcotor/documentsFetch`,{
+                apt:"apt"
+            },{
+                withCredentials: true // Include cookies in the request
+            });
             
             if (response.data.success) {
                 setFiles(response.data.documents);

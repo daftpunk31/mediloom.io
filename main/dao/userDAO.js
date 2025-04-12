@@ -94,6 +94,18 @@ class UserDAO {
         const result = await pool.query('SELECT * FROM users WHERE aadhar = $1', [aadhar]);
         return result.rows[0]; // Returns user object if found
     }
+
+    static async fetchDocumentsINFObyAadhar(aadhar) {
+        const result = await pool.query('SELECT * FROM health_records WHERE aadhar = $1', [aadhar]);
+        // console.log(result.rows);
+    return result.rows;
+    }
+
+    static async fetchDocument(record_id,aadhar) {
+        const result = await pool.query('SELECT file_location,file_name,type FROM health_records WHERE record_id=$1 AND aadhar = $2', [record_id,aadhar]);
+        // console.log(result.rows);
+    return result.rows[0];
+    }
 }
 
 export default UserDAO;

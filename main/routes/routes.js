@@ -52,12 +52,9 @@ router.get('/registerPage',(req,res)=>{
 //     res.render('login.ejs', { message });
 // })
 
-router.get('/loginPage', (req, res) => {
+router.get('/login', (req, res) => {
   res.redirect('/login');
 });
-
-
-
 
 
 // This route is used to give permission to doctor to access patient's files as soon as he (doctor) logs in.
@@ -108,52 +105,30 @@ router.get('/documentAccess', authenticate, (req, res) => {
   }
 });
 
-// After a policymaker logs in, this route is used to display the visualizations page
-// router.get('/vizualizations', authenticate, (req, res) => {
-//   if(req.session.role === "Policymaker"){
-//     const message = req.query.message || req.session.message || null;
-//       req.session.message = null; // Clear the session message after use
-//   res.render('finalViz.ejs',{ message });
-//   }
-//   else{
-//     res.status(403).send('Invalid Access'); // Return status code 403 and message
-//   }
-// });
 
-// router.get('/visualizations', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
-// });
 
-// router.get('/dashboard', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
-// });
+router.get('/documents/:fileId/view',userController.documentFetch);
 
-// router.get('/api/data', (req, res) => {
-//   res.json({ message: 'Hello from the backend!' });
+// router.get('/documents/:fileId/view', (req, res, next) => {
+//   console.log('Session User Details:', req.session.user); // Log session details for debugging
+//   userController.documentFetch(req, res, next);
 // });
 
 
-// router.get('/doctorDocAccessPage',(req,res)=>{
-//   // console.log(req.session);
-//   res.render('doctor_doc_access_page.ejs')});
-
-
-// // Fallback route for React
-// router.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
-// });
+router.get("/documentsFetch",authenticate,userController.documentsInfoFetch);
   
 router.post('/logoutUser', authenticate, userController.logoutUser);
 
-router.post("/generate-otp",userController.sendOtpMessage);
+router.post("/generate-otp",authenticate,userController.sendOtpMessage);
 
-router.post("/verify-otp", userController.verifyOtp);
+router.post("/verify-otp", authenticate,userController.verifyOtp);
 
 router.post('/registerUser', userController.registerUser);
 
 router.post('/loginUser', userController.loginUser);
 
-router.post('/sendCustomTemplateMessage', userController.sendCustomTemplateMessage);
+router.post('/sendCustomTemplateMessage',authenticate, userController.sendCustomTemplateMessage);
+
 
 
 export default router;

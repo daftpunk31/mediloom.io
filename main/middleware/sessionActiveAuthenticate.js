@@ -1,12 +1,13 @@
-function authenticate(req,res,next){
-  if(!req.session || !req.session.user){
-    // res.status(401);
-    // res.send("Access Denied");
+function authenticate(req, res, next) {
+  if (!req.session || !req.session.user) {
     console.warn('Unauthorized access attempt:', req.originalUrl);
     req.session.message = "No live session found. Please login again.";
-            return res.redirect('/loginPage'); // Redirect to the login page
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Session expired. Login Again.', 
+      redirect: '/login' // Add a redirect URL
+    });
   }
-  // console.log('Session details:', req.session.user);
   next();
 }
 

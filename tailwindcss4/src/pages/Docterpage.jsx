@@ -136,16 +136,29 @@ function Docterpage() {
         try {
             setLoading(true);
             setError("");
-            const response = await axios.get('/api/doctor/documents');
-            
-            
-            if (response.data.success) {
+            const response = await axios.get(`${config.backendUrl}/api/documentsFetch`,{
+                withCredentials: true // Include cookies in the request
+            });
+            // console.log("Documents fetched:", response.data.documents);
+
+            setFiles(Array.isArray(response.data.documents) ? response.data.documents : []);
+            if (response.data.success && Array.isArray(response.data.documents)) {
                 setFiles(response.data.documents);
                 setDataFetched(true);
                 setSuccess("Documents fetched successfully!");
             } else {
+                setFiles([]); // Set to an empty array if documents is not valid
                 setError(response.data.message || "Failed to fetch documents");
             }
+
+            
+            // if (response.data.success) {
+            //     setFiles(response.data.documents);
+            //     setDataFetched(true);
+            //     setSuccess("Documents fetched successfully!");
+            // } else {
+            //     setError(response.data.message || "Failed to fetch documents");
+            // }
         } catch (error) {
             setError(error.response?.data?.message || "An error occurred while fetching documents");
         } finally {
@@ -154,10 +167,14 @@ function Docterpage() {
     };
 
     const handleView = async (fileId) => {
+        // console.log("File ID:", fileId); // Debugging
         try {
             setLoading(true);
-            const response = await axios.get(`/api/doctor/documents/${fileId}/view`, {
-                responseType: 'blob'
+            const response = await axios.get(`${config.backendUrl}/api/documents/${fileId}/view` ,{
+                withCredentials: true // Include cookies in the request
+            },{
+                    responseType: 'blob'
+
             });
             
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -231,8 +248,8 @@ function Docterpage() {
         }
     };
 
-    const filteredFiles = files.filter(file =>
-        file.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    const filteredFiles = (files || []).filter(file =>
+        file && file.name && file.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
         (filter === "all" || file.category === filter)
     );
 
