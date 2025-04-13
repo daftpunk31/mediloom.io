@@ -4,14 +4,32 @@ import Header from "../components/Header";
 import Fotter from "../components/Fotter";
 import axios from "axios";
 import config from '../urlConfig.js';
+
 function Uploadpage() {
   const [showForm, setShowForm] = useState(false);
   const [prescriptionFiles, setPrescriptionFiles] = useState([]);
   const [testResultFiles, setTestResultFiles] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    hospitalId: '',
+    patientId: '',
+    patientName: '',
+    department: '',
+    doctorId: ''
+  });
 
   // Refs to reset file input
   const prescriptionInputRef = useRef(null);
   const testResultInputRef = useRef(null);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   // Handle file selection with max 10 files
   const handleFileChange = (event, setFiles, inputRef) => {
@@ -20,12 +38,12 @@ function Uploadpage() {
     setFiles((prevFiles) => {
       if (prevFiles.length + newFiles.length > 10) {
         alert("You can upload a maximum of 10 files.");
-        return prevFiles; // Keep previous files if limit is exceeded
+        return prevFiles;
       }
-      return [...prevFiles, ...newFiles]; // Add new files to existing ones
+      return [...prevFiles, ...newFiles];
     });
   
-    inputRef.current.value = ""; // Reset input field
+    inputRef.current.value = "";
   };
   
   // Remove a selected file
@@ -33,10 +51,64 @@ function Uploadpage() {
     setFiles((prevFiles) => {
       const updatedFiles = prevFiles.filter((_, i) => i !== index);
       if (updatedFiles.length === 0) {
-        inputRef.current.value = ""; // Reset input if no files left
+        inputRef.current.value = "";
       }
       return updatedFiles;
     });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const formDataToSend = new FormData();
+      
+      // Append form fields
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
+
+      // Append prescription files
+      prescriptionFiles.forEach((file, index) => {
+        formDataToSend.append(`prescriptionFiles`, file);
+      });
+
+      // Append test result files
+      testResultFiles.forEach((file, index) => {
+        formDataToSend.append(`testResultFiles`, file);
+      });
+
+      // Send data to backend
+      const response = await axios.post(`${config.baseUrl}/api/upload`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      },{
+        withCredentials: true
+      });
+
+      if (response.status === 200) {
+        alert('Data uploaded successfully!');
+        // Reset form
+        setFormData({
+          hospitalId: '',
+          patientId: '',
+          patientName: '',
+          department: '',
+          doctorId: ''
+        });
+        setPrescriptionFiles([]);
+        setTestResultFiles([]);
+        setShowForm(false);
+      }
+    } catch (error) {
+      console.error('Error uploading data:', error);
+      alert('Failed to upload data. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,18 +136,18 @@ function Uploadpage() {
         <section id="uploadDocsSection" className="border-gradient relative flex w-full max-w-[80%] flex-col place-content-center place-items-center overflow-hidden p-6 transition-all mt-10">
           <div className="reveal-up flex w-full h-full flex-col gap-3 text-center bg-white/10 backdrop-blur-md rounded-lg shadow-lg p-6 transition-transform duration-300">
             <div className="text-white font-semibold">
-              <form>
+              <form onSubmit={handleSubmit}>
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Hospital ID: <input type="text" required className="form-control text-white border-1" />
+                  Hospital ID: <input type="text" name="hospitalId" value={formData.hospitalId} onChange={handleInputChange} required className="form-control text-white border-1" />
                 </label>
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Patient ID: <input type="text" required className="form-control text-white border-1" />
+                  Patient ID: <input type="text" name="patientId" value={formData.patientId} onChange={handleInputChange} required className="form-control text-white border-1" />
                 </label>
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Patient Name: <input type="text" required className="form-control text-white border-1" />
+                  Patient Name: <input type="text" name="patientName" value={formData.patientName} onChange={handleInputChange} required className="form-control text-white border-1" />
                 </label>
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Department: <input type="text" required className="form-control text-white border-1" />
+                  Department: <input type="text" name="department" value={formData.department} onChange={handleInputChange} required className="form-control text-white border-1" />
                 </label>
 
                 {/* Prescription File Upload */}
@@ -90,7 +162,7 @@ function Uploadpage() {
                         <div key={index} className="flex items-center gap-4 bg-white/10 p-3 rounded-lg mt-2 shadow-md">
                           {file.type.startsWith("image/") && <img src={URL.createObjectURL(file)} alt="Preview" className="w-16 h-16 object-cover rounded-md" />}
                           <span className="text-white">{file.name}</span>
-                          <button className="bg-primary text-white py-1 px-3 rounded-md text-sm" onClick={() => removeFile(index, setPrescriptionFiles, prescriptionInputRef)}>
+                          <button type="button" className="bg-primary text-white py-1 px-3 rounded-md text-sm" onClick={() => removeFile(index, setPrescriptionFiles, prescriptionInputRef)}>
                             Remove
                           </button>
                         </div>
@@ -100,7 +172,7 @@ function Uploadpage() {
                 </label>
 
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Doctor Name: <input type="text" required className="form-control text-white border-1 " />
+                  Doctor ID: <input type="text" name="doctorId" value={formData.doctorId} onChange={handleInputChange} required className="form-control text-white border-1 " />
                 </label>
 
                 {/* Test Results File Upload */}
@@ -115,7 +187,7 @@ function Uploadpage() {
                         <div key={index} className="flex items-center gap-4 bg-white/10 p-3 rounded-lg mt-2 shadow-md">
                           {file.type.startsWith("image/") && <img src={URL.createObjectURL(file)} alt="Preview" className="w-16 h-16 object-cover rounded-md" />}
                           <span className="text-white">{file.name}</span>
-                          <button className="bg-primary text-white py-1 px-3 rounded-md text-sm" onClick={() => removeFile(index, setTestResultFiles, testResultInputRef)}>
+                          <button type="button" className="bg-primary text-white py-1 px-3 rounded-md text-sm" onClick={() => removeFile(index, setTestResultFiles, testResultInputRef)}>
                             Remove
                           </button>
                         </div>
@@ -126,8 +198,12 @@ function Uploadpage() {
 
                 <section className="flex flex-col justify-center items-center mt-10">
                   <div className="flex justify-center items-center gap-4">
-                    <button className="btn bg-[#7e22ce85] shadow-lg shadow-primary transition-transform duration-[0.3s] hover:scale-x-[1.03] hover:bg-opacity-80 text-white py-2 px-6 rounded-lg">
-                      Submit
+                    <button 
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={`btn bg-[#7e22ce85] shadow-lg shadow-primary transition-transform duration-[0.3s] hover:scale-x-[1.03] hover:bg-opacity-80 text-white py-2 px-6 rounded-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {isSubmitting ? 'Uploading...' : 'Submit'}
                     </button>
                   </div>
                 </section>

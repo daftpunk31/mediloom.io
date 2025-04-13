@@ -136,7 +136,7 @@ function Docterpage() {
         try {
             setLoading(true);
             setError("");
-            const response = await axios.get(`${config.backendUrl}/api/documentsFetch`,{
+            const response = await axios.get(`${config.backendUrl}/api/documentsInfoFetch`,{
                 withCredentials: true // Include cookies in the request
             });
             // console.log("Documents fetched:", response.data.documents);
@@ -169,24 +169,51 @@ function Docterpage() {
     const handleView = async (fileId) => {
         // console.log("File ID:", fileId); // Debugging
         try {
+            // console.log("File ID:", fileId); // Debugging
             setLoading(true);
             const response = await axios.get(`${config.backendUrl}/api/documents/${fileId}/view` ,{
-                withCredentials: true // Include cookies in the request
-            },{
-                    responseType: 'blob'
+                withCredentials: true, // Include cookies in the request
+                responseType: 'blob', // Set response type to blob for file download
 
             });
-            
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            // console.log("View response:", response); // Debugging
+            console.log("View response:", response.data); // Debugging
+            console.log('Response Content-Type:', response.headers['content-type']);
+            // const url = window.URL.createObjectURL(new Blob([response.data]));
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] }));
             setPreviewUrl(url);
-            setPreviewFile(files.find(file => file.id === fileId));
-        } catch (err) {
-            console.error('View error:', err);
-            setError(err.response?.data?.message || "Failed to view document");
-        } finally {
-            setLoading(false);
+
+            const file = files.find(file => String(file.id) === String(fileId));
+        if (!file) {
+            console.error("File not found in the files array");
+            setError("File not found");
+            return;
         }
-    };
+        console.log("Found file:", file); // Debugging
+        setPreviewFile(file);
+
+        console.log("Preview URL:", url); // Debugging
+        console.log("Preview File:", file); // Debugging
+    } catch (err) {
+        console.error('View error:', err);
+        setError(err.response?.data?.message || "Failed to view document");
+    } finally {
+        setLoading(false);
+    }
+};
+
+
+    //         console.log("Files array:", files); // Debugging
+    //         setPreviewFile(files.find(file => file.id === fileId));
+    //         console.log("Preview URL:", url); // Debugging
+    //         console.log("Preview File:", previewFile); // Debugging
+    //     } catch (err) {
+    //         console.error('View error:', err);
+    //         setError(err.response?.data?.message || "Failed to view document");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const closePreview = () => {
         if (previewUrl) {
@@ -250,7 +277,7 @@ function Docterpage() {
 
     const filteredFiles = (files || []).filter(file =>
         file && file.name && file.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        (filter === "all" || file.category === filter)
+        (filter === "all" || file.type === filter)
     );
 
     return (
@@ -375,9 +402,9 @@ function Docterpage() {
                                             className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white appearance-none outline-none"
                                         >
                                             <option value="all">All</option>
-                                            <option value="Report">Reports</option>
-                                            <option value="Prescription">Prescriptions</option>
-                                            <option value="Lab Report">Lab Reports</option>
+                                            <option value="Report">Report</option>
+                                            <option value="Prescription">Prescription</option>
+                                            <option value="Other">Other</option>
                                         </select>
                                     </div>
                                 </div>
@@ -425,7 +452,9 @@ function Docterpage() {
                                         className="w-full h-full min-h-[70vh]"
                                         title={previewFile.name}
                                     />
-                                ) : (
+                                ) : previewFile.type === 'text/xml' || previewFile.type === 'text/plain' ? (
+                                    <pre className="whitespace-pre-wrap">{response.data}</pre>
+                                ) :(
                                     <img 
                                         src={previewUrl} 
                                         alt={previewFile.name}

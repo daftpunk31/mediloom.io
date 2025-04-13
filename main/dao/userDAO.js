@@ -101,11 +101,25 @@ class UserDAO {
     return result.rows;
     }
 
-    static async fetchDocument(record_id,aadhar) {
-        const result = await pool.query('SELECT file_location,file_name,type FROM health_records WHERE record_id=$1 AND aadhar = $2', [record_id,aadhar]);
-        // console.log(result.rows);
-    return result.rows[0];
+    // static async fetchDocument(record_id,aadhar) {
+    //     const result = await pool.query('SELECT file_location,file_name,type FROM health_records WHERE record_id=$1 AND aadhar = $2', [record_id,aadhar]);
+    //     // console.log(result.rows);
+    // return result.rows[0];
+    // }
+
+
+    static async fetchDocument(record_id, aadhar) {
+    const result = await pool.query(
+        'SELECT file_location, file_name, type FROM health_records WHERE record_id=$1 AND aadhar=$2',[record_id, aadhar]);
+
+    if (!result.rows[0]) {
+        throw new Error('Document not found');
     }
+
+    const { file_location, file_name, type } = result.rows[0];
+
+    return { file_location, file_name, type };
+}
 }
 
 export default UserDAO;

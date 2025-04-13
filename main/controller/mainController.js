@@ -1,3 +1,5 @@
+import fs from 'fs';
+import mime from 'mime';
 import crypto from 'crypto';
 import UserDAO from '../dao/userDAO.js';
 import * as whatsappServices from '../api_services/whatsappService.js';
@@ -323,37 +325,81 @@ export const documentsInfoFetch = async (req, res) => {
     }
 }
 
+// export const documentFetch = async (req, res) => {
+//     try{
+//         // console.log('Request Params:', req.params); // Debugging
+//         const {fileId} = req.params;
+//         if (!fileId) {
+//             console.error('File ID is missing');
+//             return res.status(400).json({ success: false, message: 'File ID is required' });
+//         }
+//         // console.log('File ID:', fileId);
+//         const aadhar = req.session.patient_detials.aadhar;
+//         // console.log('Aadhar:', aadhar);
+
+//         const result = await UserDAO.fetchDocument(fileId,aadhar);
+
+//         if (!result) {
+//             console.error('Document not found');
+//             return res.status(404).json({ success: false, message: 'Document not found' });
+//         }
+
+//         const documentData = {
+//             location: result.file_location,
+//             name: result.file_name,
+//             type: result.type,
+//         };
+
+//         // console.log('Document data:', documentData);
+
+//         return res.status(200).json({ success: true, message: 'Document fetched successfully', document: documentData });
+//     }
+//     catch{
+//         return res.status(500).json({ success: false, message: 'Error fetching document' });
+
+//     }
+// }
+
+
 export const documentFetch = async (req, res) => {
-    try{
-        // console.log('Request Params:', req.params); // Debugging
-        const {fileId} = req.params;
+    try {
+        // res.setHeader('Access-Control-Allow-Origin', '*');
+        // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+        // res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+
+        const { fileId } = req.params;
         if (!fileId) {
             console.error('File ID is missing');
             return res.status(400).json({ success: false, message: 'File ID is required' });
         }
-        // console.log('File ID:', fileId);
+
         const aadhar = req.session.patient_detials.aadhar;
-        // console.log('Aadhar:', aadhar);
 
-        const result = await UserDAO.fetchDocument(fileId,aadhar);
+        // Fetch file details from the database
+        const { file_location, file_name } = await UserDAO.fetchDocument(fileId, aadhar);
 
-        if (!result) {
-            console.error('Document not found');
-            return res.status(404).json({ success: false, message: 'Document not found' });
-        }
+        // Dynamically determine the MIME type based on the file extension
+        const mimeType = mime.getType(file_location) || 'application/octet-stream'; // Default to binary if unknown
+        console.log('File location:', file_location);
+        console.log('File name:', file_name);
+        console.log('Detected MIME type:', mimeType);
 
-        const documentData = {
-            location: result.file_location,
-            name: result.file_name,
-            type: result.type,
-        };
+        const readStream = fs.createReadStream(file_location);
+        console.log('Streaming file:', file_location);
+        // Set headers for file streaming
+        res.setHeader('Content-Disposition', `inline; filename="${file_name}"`);
+        res.setHeader('Content-Type', mimeType);
 
-        // console.log('Document data:', documentData);
+        // Stream the file to the client
+        readStream.pipe(res);
 
-        return res.status(200).json({ success: true, message: 'Document fetched successfully', document: documentData });
-    }
-    catch{
+        readStream.on('error', (err) => {
+            console.error('Error streaming file:', err);
+            return res.status(500).json({ success: false, message: 'Error streaming file' });
+        });
+    } catch (error) {
+        console.error('Error fetching document:', error);
         return res.status(500).json({ success: false, message: 'Error fetching document' });
-
     }
-}
+};

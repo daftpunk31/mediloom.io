@@ -115,7 +115,7 @@ router.get('/documents/:fileId/view',userController.documentFetch);
 // });
 
 
-router.get("/documentsFetch",authenticate,userController.documentsInfoFetch);
+router.get("/documentsInfoFetch",authenticate,userController.documentsInfoFetch);
   
 router.post('/logoutUser', authenticate, userController.logoutUser);
 
