@@ -181,16 +181,18 @@ function Docterpage() {
             console.log('Response Content-Type:', response.headers['content-type']);
             // const url = window.URL.createObjectURL(new Blob([response.data]));
             const url = window.URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] }));
-            setPreviewUrl(url);
-
+            
             const file = files.find(file => String(file.id) === String(fileId));
-        if (!file) {
-            console.error("File not found in the files array");
-            setError("File not found");
-            return;
-        }
-        console.log("Found file:", file); // Debugging
-        setPreviewFile(file);
+            if (!file) {
+                console.error("File not found in the files array");
+                setError("File not found");
+                return;
+            }
+            console.log("Found file:", file); // Debugging
+            // Set the content type based on server response
+            file.type = response.headers['content-type'];
+            setPreviewUrl(url);
+            setPreviewFile(file);
 
         console.log("Preview URL:", url); // Debugging
         console.log("Preview File:", file); // Debugging
@@ -447,7 +449,8 @@ function Docterpage() {
                             </div>
                             <div className="flex-1 overflow-auto p-4">
                                 {previewFile.type === 'application/pdf' ? (
-                                    <iframe 
+                                    <iframe
+
                                         src={previewUrl} 
                                         className="w-full h-full min-h-[70vh]"
                                         title={previewFile.name}

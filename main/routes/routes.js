@@ -107,7 +107,7 @@ router.get('/documentAccess', authenticate, (req, res) => {
 
 
 
-router.get('/documents/:fileId/view',userController.documentFetch);
+router.get('/documents/:fileId/view',authenticate,userController.documentFetch);
 
 // router.get('/documents/:fileId/view', (req, res, next) => {
 //   console.log('Session User Details:', req.session.user); // Log session details for debugging
