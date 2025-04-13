@@ -11,11 +11,7 @@ function Uploadpage() {
   const [testResultFiles, setTestResultFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    hospitalId: '',
-    patientId: '',
-    patientName: '',
-    department: '',
-    doctorId: ''
+    file_name: '',
   });
 
   // Refs to reset file input
@@ -81,23 +77,19 @@ function Uploadpage() {
       });
 
       // Send data to backend
-      const response = await axios.post(`${config.baseUrl}/api/upload`, formDataToSend, {
+      const response = await axios.post(`${config.backendUrl}/api/upload`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        }
-      },{
+        },
         withCredentials: true
       });
+      
 
       if (response.status === 200) {
         alert('Data uploaded successfully!');
         // Reset form
         setFormData({
-          hospitalId: '',
-          patientId: '',
-          patientName: '',
-          department: '',
-          doctorId: ''
+          file_name: '',
         });
         setPrescriptionFiles([]);
         setTestResultFiles([]);
@@ -137,22 +129,10 @@ function Uploadpage() {
           <div className="reveal-up flex w-full h-full flex-col gap-3 text-center bg-white/10 backdrop-blur-md rounded-lg shadow-lg p-6 transition-transform duration-300">
             <div className="text-white font-semibold">
               <form onSubmit={handleSubmit}>
-                <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Hospital ID: <input type="text" name="hospitalId" value={formData.hospitalId} onChange={handleInputChange} required className="form-control text-white border-1" />
-                </label>
-                <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Patient ID: <input type="text" name="patientId" value={formData.patientId} onChange={handleInputChange} required className="form-control text-white border-1" />
-                </label>
-                <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Patient Name: <input type="text" name="patientName" value={formData.patientName} onChange={handleInputChange} required className="form-control text-white border-1" />
-                </label>
-                <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Department: <input type="text" name="department" value={formData.department} onChange={handleInputChange} required className="form-control text-white border-1" />
-                </label>
-
+                
                 {/* Prescription File Upload */}
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex flex-col hover:bg-opacity-80 transition-all mt-4">
-                  <span>Prescription ({prescriptionFiles.length}/10):</span>
+                  <span>Prescriptions ({prescriptionFiles.length}/10):</span>
                   <input type="file" multiple className="form-control text-white" ref={prescriptionInputRef} 
        onChange={(e) => handleFileChange(e, setPrescriptionFiles, prescriptionInputRef)} />
 
@@ -171,13 +151,9 @@ function Uploadpage() {
                   )}
                 </label>
 
-                <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex justify-between items-center hover:bg-opacity-80 transition-all mt-4">
-                  Doctor ID: <input type="text" name="doctorId" value={formData.doctorId} onChange={handleInputChange} required className="form-control text-white border-1 " />
-                </label>
-
                 {/* Test Results File Upload */}
                 <label className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md flex flex-col hover:bg-opacity-80 transition-all mt-4">
-                  <span>Test Results ({testResultFiles.length}/10):</span>
+                  <span>Test Reports ({testResultFiles.length}/10):</span>
                   <input type="file" multiple className="form-control" ref={testResultInputRef} 
        onChange={(e) => handleFileChange(e, setTestResultFiles, testResultInputRef)} />
 

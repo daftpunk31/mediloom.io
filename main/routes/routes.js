@@ -1,3 +1,4 @@
+import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
@@ -31,18 +32,18 @@ router.get('/', (req, res) => {
   }
 });
 //This route is used to diplay any sort of error.
-router.get('/errorDisplay',(req,res)=>{
-  const message = req.query.message || req.session.message || null;
-    req.session.message = null; // Clear the session message after use
-    res.render('errorDisplayPage.ejs', { message });
-})
+// router.get('/errorDisplay',(req,res)=>{
+//   const message = req.query.message || req.session.message || null;
+//     req.session.message = null; // Clear the session message after use
+//     res.render('errorDisplayPage.ejs', { message });
+// })
 
 // This route displays the registration page
-router.get('/registerPage',(req,res)=>{
-  const message = req.query.message || req.session.message || null;
-    req.session.message = null; // Clear the session message after use
-    res.render('register.ejs', { message });
-})
+// router.get('/registerPage',(req,res)=>{
+//   const message = req.query.message || req.session.message || null;
+//     req.session.message = null; // Clear the session message after use
+//     res.render('register.ejs', { message });
+// })
 
 // This route displays the login page
 // router.get('/loginPage',(req,res)=>{
@@ -58,40 +59,47 @@ router.get('/login', (req, res) => {
 
 
 // This route is used to give permission to doctor to access patient's files as soon as he (doctor) logs in.
-router.get('/doctorDocumentAccessPermission',authenticate,(req,res)=>{
-  if(req.session.role === "Doctor/Medical Professional"){
-  const message = req.query.message || req.session.message || null;
-    req.session.message = null; // Clear the session message after use
-  res.render('doctorAccessPermissionPage.ejs',{ message })
-  }
-  else{
-    res.status(403).send('Invalid Access'); // Return status code 403 and message
-  }
-});
+// router.get('/doctorDocumentAccessPermission',authenticate,(req,res)=>{
+//   if(req.session.role === "Doctor/Medical Professional"){
+//   const message = req.query.message || req.session.message || null;
+//     req.session.message = null; // Clear the session message after use
+//   res.render('doctorAccessPermissionPage.ejs',{ message })
+//   }
+//   else{
+//     res.status(403).send('Invalid Access'); // Return status code 403 and message
+//   }
+// });
 
 // After a doctor logs in and gets permission from the patient, this route is used to display the doctor dashboard
-router.get('/doctorDashboard',authenticate,(req,res)=>{
-  if(req.session.role === "Doctor/Medical Professional"){
-    const message = req.query.message || req.session.message || null;
-      req.session.message = null;
-  res.render('doctorDashboardPage.ejs',{message})
-  }
-  else{
-    res.status(403).send('Invalid Access'); // Return status code 403 and message
-  }
-});
+// router.get('/doctorDashboard',authenticate,(req,res)=>{
+//   if(req.session.role === "Doctor/Medical Professional"){
+//     const message = req.query.message || req.session.message || null;
+//       req.session.message = null;
+//   res.render('doctorDashboardPage.ejs',{message})
+//   }
+//   else{
+//     res.status(403).send('Invalid Access'); // Return status code 403 and message
+//   }
+// });
 
 // After a hospital admin logs in, this route is used to display the hospital admin dashboard
-router.get('/adminDashboard', authenticate, (req,res)=>{
-  if(req.session.role === "Hospital Admin"){
-    const message = req.query.message || req.session.message || null;
-      req.session.message = null; // Clear the session message after use
-  res.render('adminDashboard.ejs',{ message });
-  }
-  else{
-    res.status(403).send('Invalid Access'); // Return status code 403 and message
-  }
-});
+// router.get('/adminDashboard', authenticate, (req,res)=>{
+//   if(req.session.role === "Hospital Admin"){
+//     const message = req.query.message || req.session.message || null;
+//       req.session.message = null; // Clear the session message after use
+//   res.render('adminDashboard.ejs',{ message });
+//   }
+//   else{
+//     res.status(403).send('Invalid Access'); // Return status code 403 and message
+//   }
+// });
+
+const storage = multer.memoryStorage(); // Store files in memory for now
+const upload = multer({ storage });
+
+router.post('/upload',authenticate,upload.fields([{ name: 'prescriptionFiles', maxCount: 10 },{ name: 'testResultFiles', maxCount: 10 }]),userController.uploadDocument);
+
+// router.post('/upload',authenticate, userController.uploadDocument);
 
 // After a civilian logs in, this route is used to display the document access page
 router.get('/documentAccess', authenticate, (req, res) => {
@@ -105,15 +113,7 @@ router.get('/documentAccess', authenticate, (req, res) => {
   }
 });
 
-
-
 router.get('/documents/:fileId/view',authenticate,userController.documentFetch);
-
-// router.get('/documents/:fileId/view', (req, res, next) => {
-//   console.log('Session User Details:', req.session.user); // Log session details for debugging
-//   userController.documentFetch(req, res, next);
-// });
-
 
 router.get("/documentsInfoFetch",authenticate,userController.documentsInfoFetch);
   

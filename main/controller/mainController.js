@@ -325,41 +325,6 @@ export const documentsInfoFetch = async (req, res) => {
     }
 }
 
-// export const documentFetch = async (req, res) => {
-//     try{
-//         // console.log('Request Params:', req.params); // Debugging
-//         const {fileId} = req.params;
-//         if (!fileId) {
-//             console.error('File ID is missing');
-//             return res.status(400).json({ success: false, message: 'File ID is required' });
-//         }
-//         // console.log('File ID:', fileId);
-//         const aadhar = req.session.patient_detials.aadhar;
-//         // console.log('Aadhar:', aadhar);
-
-//         const result = await UserDAO.fetchDocument(fileId,aadhar);
-
-//         if (!result) {
-//             console.error('Document not found');
-//             return res.status(404).json({ success: false, message: 'Document not found' });
-//         }
-
-//         const documentData = {
-//             location: result.file_location,
-//             name: result.file_name,
-//             type: result.type,
-//         };
-
-//         // console.log('Document data:', documentData);
-
-//         return res.status(200).json({ success: true, message: 'Document fetched successfully', document: documentData });
-//     }
-//     catch{
-//         return res.status(500).json({ success: false, message: 'Error fetching document' });
-
-//     }
-// }
-
 
 export const documentFetch = async (req, res) => {
     try {
@@ -403,3 +368,58 @@ export const documentFetch = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error fetching document' });
     }
 };
+
+
+export const uploadDocument = async (req, res) => {
+    try {
+      const aadhar = req.session.patient_detials?.aadhar;
+      if (!aadhar) {
+        return res.status(400).json({ success: false, message: 'Patient Aadhar not found in session' });
+      }
+      const hospitalID = req.session.user.hospitalID;
+      if (!hospitalID) {
+        return res.status(400).json({ success: false, message: 'Hospital ID not found in session' });
+      }
+      const doc_id = req.session.user.doc_id;
+        if (!doc_id) {
+            return res.status(400).json({ success: false, message: 'Doctor ID not found in session' });
+        }
+  
+      const uploadDir = '/Users/prakash/Desktop/major_proj/health_records/'; // or any other safe folder
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+  
+      const file_name  = req.body.file_name;
+      const prescriptionFiles = req.files?.prescriptionFiles || [];
+      const testResultFiles = req.files?.testResultFiles || [];
+    //   const safeFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+  
+      const allFiles = [...prescriptionFiles, ...testResultFiles];
+      const savePromises = allFiles.map(async (file) => {
+        const safeFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        // const filePath = `${uploadDir}/${Date.now()}_${safeFileName}`;
+        const filePath = `${uploadDir}/${safeFileName}`;
+
+        await fs.promises.writeFile(filePath, file.buffer);
+  
+        const fileType = prescriptionFiles.includes(file) ? 'Prescription' : 'Report';
+  
+        await UserDAO.saveDocumentMetadata({
+          aadhar,
+          file_location: filePath,
+          file_name: safeFileName,
+          type: fileType,
+          hospitalID,
+          doc_id
+        });
+      });
+  
+      await Promise.all(savePromises);
+  
+      return res.status(200).json({ success: true, message: 'Documents uploaded successfully' });
+    } catch (error) {
+      console.error('Upload error:', error);
+      return res.status(500).json({ success: false, message: 'Error uploading documents' });
+    }
+  };
+  

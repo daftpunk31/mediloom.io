@@ -119,7 +119,17 @@ class UserDAO {
     const { file_location, file_name, type } = result.rows[0];
 
     return { file_location, file_name, type };
-}
+    }
+
+    static async saveDocumentMetadata({ aadhar, file_location, file_name, type, hospitalID, doc_id }) {
+        await pool.query(
+          'INSERT INTO health_records (aadhar, file_location, file_name, type, hospital_id,doc_id) VALUES ($1, $2, $3, $4, $5, $6)',
+          [aadhar, file_location, file_name, type, hospitalID, doc_id]
+        );
+      }
+      
+
+
 }
 
 export default UserDAO;

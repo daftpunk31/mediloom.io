@@ -13,6 +13,7 @@ export default session({
   resave: false,
   saveUninitialized: false,
   name: 'sessionID',
+  rolling: true, // resets the cookie maxAge on every response
   cookie: {
       secure: process.env.NODE_ENV === 'production', //if true only transmits the cookie via https protocol
       httpOnly: true, // if true prevents client side js from reading the cookie
