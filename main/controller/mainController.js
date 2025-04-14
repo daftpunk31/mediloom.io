@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs';
+import pool from '../postgres_db_config/db.js';
 import fs from 'fs';
 import mime from 'mime';
 import crypto from 'crypto';
@@ -25,33 +27,52 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({success:false, message: 'User already exists' });
         }
 
-        else{
-        const newUser = await UserDAO.createUser(firstname,phone,aadhar, email, password,role,hospitalID,gender,birthdate);
-
-        if (!newUser) {
-            return res.status(500).json({success:false, message: 'Error creating user' });
-        }
-
-        req.session.user = newUser; // Store user ID in session
-        req.session.role = role; // Store user role in session
-        // console.log('New user created:', newUser);
-        // console.log('SessionID details:', req.sessionID);
-        // console.log('Session user details:', req.session.user);
-        // console.log('Session user role details:', req.session.role);
-
-        if(role=="Civilian"){
-        await whatsappServices.sendCustomTemplateMessage(phone, firstname);
-        }
-
-        req.session.destroy((err) => {
-            if (err) {
-                console.error("Error destroying session:", err);
-                return res.status(500).json({success:false, message: "Error clearing cookie after registration" });
+        else {
+            let newUser;
+        
+            if (role === "Doctor/Medical Professional") {
+                const approved = await UserDAO.isDoctorApproved(aadhar, email, hospitalID);
+                if (!approved) {
+                    return res.status(403).json({
+                        success: false,
+                        message: "Doctor not pre-approved. Please contact your hospital admin."
+                    });
+                }
+        
+                // Insert manually into the doctors table (not through UserDAO)
+                const hashedPassword = await bcrypt.hash(password, 10);
+        
+                const result = await pool.query(
+                    'INSERT INTO doctors (doc_id, email, password, phone, first_name, hospital_id, gender, birthdate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING doc_id, first_name, email',
+                    [aadhar, email, hashedPassword, phone, firstname, hospitalID, gender, birthdate]
+                );
+        
+                newUser = result.rows[0];
+            } else {
+                // All other roles still use UserDAO
+                newUser = await UserDAO.createUser(firstname, phone, aadhar, email, password, role, hospitalID, gender, birthdate);
             }
-            res.clearCookie('sessionID'); // Use the same name as in your session configuration
-            return res.status(200).json({success:true, message: 'User registered successfully', user: newUser });
-        });
-        }
+        
+            if (!newUser) {
+                return res.status(500).json({ success: false, message: 'Error creating user' });
+            }
+        
+            req.session.user = newUser;
+            req.session.role = role;
+        
+            if (role === "Civilian") {
+                await whatsappServices.sendCustomTemplateMessage(phone, firstname);
+            }
+        
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error("Error destroying session:", err);
+                    return res.status(500).json({ success: false, message: "Error clearing cookie after registration" });
+                }
+                res.clearCookie('sessionID');
+                return res.status(200).json({ success: true, message: 'User registered successfully', user: newUser });
+            });
+        }        
     } catch (error) {
       console.error("Error during user registration:", error); // Log actual error
 
@@ -494,3 +515,49 @@ export const getHospitalResources = async (req, res) => {
             return res.status(500).json({ success:false, message: 'Error checking authentication status' });
         }
     }
+
+    // Doctors code
+    export const getApprovedDoctors = async (req, res) => {
+        try {
+            const hospital_id = req.session.user.hospital_id;
+            const doctors = await UserDAO.getExistingDoctorsByHospital(hospital_id);
+            // console.log("Hospital ID from session:", req.session.user?.hospital_id);
+            // console.log("Doctors returned:", doctors);
+
+            res.status(200).json({ success: true, doctors });
+        } catch (err) {
+            console.error("Error fetching approved doctors:", err);
+            res.status(500).json({ success: false, message: "Failed to fetch approved doctors." });
+        }
+    };
+    
+    export const addApprovedDoctor = async (req, res) => {
+        try {
+            const hospital_id = req.session.user.hospital_id;
+            const added_by_admin_id = req.session.user.admin_id;
+    
+            const doctorData = {
+                ...req.body,
+                hospital_id,
+                added_by_admin_id,
+            };
+    
+            await UserDAO.addApprovedDoctor(doctorData);
+            res.status(200).json({ success: true, message: "Doctor approved successfully." });
+        } catch (err) {
+            console.error("Error approving doctor:", err);
+            res.status(500).json({ success: false, message: "Failed to approve doctor." });
+        }
+    };
+    
+    export const deleteApprovedDoctor = async (req, res) => {
+        try {
+            const { doc_id } = req.params;
+            await UserDAO.deleteApprovedDoctor(doc_id);
+            res.status(200).json({ success: true, message: "Doctor approval deleted." });
+        } catch (err) {
+            console.error("Error deleting approved doctor:", err);
+            res.status(500).json({ success: false, message: "Failed to delete doctor approval." });
+        }
+    };
+    

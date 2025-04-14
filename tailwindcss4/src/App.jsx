@@ -17,6 +17,8 @@ import Resourcepage from './pages/Resourcepage';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Staff from './pages/Staffpage';
+import Hospitaladmin from './pages/hospitalAdmin';
 
  const App = () => {
 
@@ -30,7 +32,9 @@ import Profile from './pages/Profile';
         <Route path="/civilian" element={<Patient />} />
         <Route path="/doctor" element={<Docterpage />} />
         <Route path="/upload" element={<Uploadpage />} />
+        <Route path="/hospitaladmin" element={<Hospitaladmin/>} />
         <Route path="/resources" element={<Resourcepage />} />
+        <Route path="/staff" element={<Staff />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>

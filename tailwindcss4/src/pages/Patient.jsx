@@ -432,7 +432,7 @@ function Patient() {
                                             <option value="all">All</option>
                                             <option value="Report">Report</option>
                                             <option value="Prescription">Prescription</option>
-                                            <option value="Other">Other</option>
+                                            
                                         </select>
                                     </div>
                                 </div>

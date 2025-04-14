@@ -127,17 +127,21 @@ router.get('/login', (req, res) => {
 
 router.get('/profile',authenticate,userController.getProfile);
 
-router.get('/api/status',userController.checkAuthStatus);
+router.get('/status',userController.checkAuthStatus);
 
 router.get('/documents/:fileId/view',authenticate,userController.documentFetch);
 
 router.get("/documentsInfoFetch",authenticate,userController.documentsInfoFetch);
 
+
+router.get("/hospital-doctors", authenticate, userController.getApprovedDoctors);
+
 router.get('/hospital-resources', authenticate, userController.getHospitalResources);
+
 
 router.post('/hospital-resources', authenticate, userController.saveOrUpdateHospitalResources);
 
-router.delete('/hospital-resources/:id', authenticate, userController.deleteHospitalResource);
+router.post("/hospital-doctors", authenticate, userController.addApprovedDoctor);
 
 const storage = multer.memoryStorage(); // Store files in memory for now
 const upload = multer({ storage });
@@ -157,5 +161,10 @@ router.post('/loginUser', userController.loginUser);
 router.post('/sendCustomTemplateMessage',authenticate, userController.sendCustomTemplateMessage);
 
 
+
+router.delete("/hospital-doctors/:doc_id", authenticate, userController.deleteApprovedDoctor);
+
+
+router.delete('/hospital-resources/:id', authenticate, userController.deleteHospitalResource);
 
 export default router;

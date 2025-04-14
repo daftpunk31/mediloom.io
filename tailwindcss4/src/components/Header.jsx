@@ -5,32 +5,12 @@ import GSAPcomponent from './GSAPcomponent';
 import axios from "axios";
 import config from '../urlConfig.js';
 
-
 const Header = () => {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(window.innerWidth < 1024);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const collapseHeaderItemsRef = useRef(null);
   const collapseBtnRef = useRef(null);
 
   const RESPONSIVE_WIDTH = 1024;
-
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await fetch(`${config.backendUrl}/api/status`, {
-          withCredentials: true, // important if using cookies/sessions
-        });
-        const data = await response.json();
-        setIsLoggedIn(data.success); // set based on "success" from backend
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-        setIsLoggedIn(false);
-      }
-    };
-  
-    checkAuthStatus();
-  }, []);
-  
 
   const onHeaderClickOutside = (e) => {
     if (
@@ -121,7 +101,7 @@ const Header = () => {
     <header
       className="max-w-lg:px-4 max-w-lg:mr-auto absolute top-0 z-20 flex h-[60px] w-full bg-opacity-0 px-[5%] lg:justify-around"
     >
-      <a className="h-[50px] w-[70px] p-[4px]" href="">
+      <a className="h-[50px] w-[70px] p-[4px]" href="/">
         <img
           src={assets.logo}
           alt="logo"
@@ -136,21 +116,21 @@ const Header = () => {
         <div
           className="flex h-full w-max gap-5 text-base max-lg:mt-[30px] max-lg:flex-col max-lg:place-items-end max-lg:gap-5 lg:mx-auto lg:place-items-center"
         >
-          <a className="header-links" href="#"> Home </a>
-          <a className="header-links" href="#Aboutus"> About us </a>
-          <a className="header-links" href="#Contactus"> Contact us </a>
-          {isLoggedIn && (
-            <a className="header-links" href="/profile"> Profile </a>
-          )}
+          <a className="header-links" href="/"> Home </a>
+          <a className="header-links" href="/#Aboutus"> About us </a>
+          <a className="header-links" href="/#Contactus"> Contact us </a>
+          <a className="header-links" href="/profile"> Profile </a>
         </div>
       </div>
       <button
-        className={`bi ${isHeaderCollapsed ? "bi-list absolute" : "bi-x fixed"} right-3 top-3 z-50 text-3xl text-white lg:hidden`}
-        onClick={toggleHeader}
-        aria-label="menu"
-        id="collapse-btn"
-        ref={collapseBtnRef}
-      ></button>
+  className={`bi ${isHeaderCollapsed ? "bi-list absolute" : "bi-x fixed"} right-3 top-3 z-50 text-3xl text-white lg:hidden`}
+  onClick={toggleHeader}
+  aria-label="menu"
+  id="collapse-btn"
+  ref={collapseBtnRef}
+></button>
+
+
     </header>
     </>
   );

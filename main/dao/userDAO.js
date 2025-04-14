@@ -127,8 +127,49 @@ class UserDAO {
           [aadhar, file_location, file_name, type, hospitalID, doc_id]
         );
       }
-      
 
+      // Hospital Admin Doctor
+
+    static async isDoctorApproved(doc_id, email, hospital_id) {
+    const result = await pool.query(
+        'SELECT * FROM approved_doctor_candidates WHERE doc_id = $1 AND email = $2 AND hospital_id = $3',
+        [doc_id, email, hospital_id]
+    );
+    return result.rows.length > 0;
+}
+
+    static async getExistingDoctorsByHospital(hospital_id) {
+    const result = await pool.query(
+        'SELECT * FROM doctors WHERE hospital_id = $1',
+        [hospital_id]
+    );
+    return result.rows;
+}
+
+    static async addApprovedDoctor(candidate) {
+    const {
+        doc_id,
+        first_name,
+        email,
+        phone,
+        gender,
+        birthdate,
+        hospital_id,
+        added_by_admin_id
+    } = candidate;
+
+    await pool.query(
+        'INSERT INTO approved_doctor_candidates (doc_id, first_name, email, phone, gender, birthdate, hospital_id, added_by_admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [doc_id, first_name, email, phone, gender, birthdate, hospital_id, added_by_admin_id]
+    );
+}
+
+    static async deleteApprovedDoctor(doc_id) {
+    await pool.query(
+        'DELETE FROM doctors WHERE doc_id = $1',
+        [doc_id]
+    );
+    }
 
 }
 

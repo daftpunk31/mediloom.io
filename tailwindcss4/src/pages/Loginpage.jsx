@@ -71,7 +71,7 @@ const Loginpage = () => {
                     window.location.href = `/doctor`;
                 }
                 else if (formData.role === "Hospital Admin"){
-                    window.location.href = `/resources`;
+                    window.location.href = `/hospitaladmin`;
                 }
                 else{
                 window.location.href = `/${formData.role.toLowerCase().replace(/\s+/g, '')}`;

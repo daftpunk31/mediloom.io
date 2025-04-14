@@ -78,6 +78,7 @@ function Resourcepage() {
       });
       setSuccessMessage("Resources updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
+
       fetchResources();
     } catch (error) {
       console.error("Error updating resources:", error);
@@ -184,6 +185,7 @@ function Resourcepage() {
               </button>
 
               <section className="flex flex-col justify-center items-center mt-10">
+              
                 <button
                   type="submit"
                   disabled={loading}
