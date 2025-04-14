@@ -2,6 +2,7 @@ import fs from 'fs';
 import mime from 'mime';
 import crypto from 'crypto';
 import UserDAO from '../dao/userDAO.js';
+import HospitalDAO from '../dao/hospitalDAO.js';
 import * as whatsappServices from '../api_services/whatsappService.js';
 
 export const registerUser = async (req, res) => {
@@ -420,6 +421,44 @@ export const uploadDocument = async (req, res) => {
     } catch (error) {
       console.error('Upload error:', error);
       return res.status(500).json({ success: false, message: 'Error uploading documents' });
+    }
+  };
+  
+
+
+//Hospital Admin Controllers
+
+export const getHospitalResources = async (req, res) => {
+    try {
+      const hospitalId = req.session.user.hospital_id;
+      const resources = await HospitalDAO.getResourcesByHospital(hospitalId);
+      res.status(200).json({success:true, resources });
+    } catch (err) {
+      console.error('Fetch error:', err);
+      res.status(500).json({ success:false, message: 'Failed to fetch resources' });
+    }
+  };
+  
+  export const saveOrUpdateHospitalResources = async (req, res) => {
+    try {
+      const hospitalId = req.session.user.hospital_id;
+      const { resources } = req.body;
+      await HospitalDAO.saveOrUpdateResources(hospitalId, resources);
+      res.status(200).json({ success:true, message: 'Resources saved successfully' });
+    } catch (err) {
+      console.error('Save error:', err);
+      res.status(500).json({ success:false, message: 'Failed to save resources' });
+    }
+  };
+  
+  export const deleteHospitalResource = async (req, res) => {
+    try {
+      const { id } = req.params;
+      await HospitalDAO.deleteResourceById(id);
+      res.status(200).json({ success:true,message: 'Resource deleted' });
+    } catch (err) {
+      console.error('Delete error:', err);
+      res.status(500).json({ success:false, message: 'Failed to delete resource' });
     }
   };
   

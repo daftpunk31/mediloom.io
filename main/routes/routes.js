@@ -24,13 +24,13 @@ const __dirname = path.dirname(__filename);
 // router.use(authenticate);
 // router.get('/profile',profileController.profile);
 
-router.get('/', (req, res) => {
-  if (req.session.user) {
-    res.render('displayStuffPage.ejs', { user: req.session.user}); // Render EJS template with user details
-  } else {
-    res.render('displayStuffPage.ejs', { user: null }); // Render template with no user details
-  }
-});
+// router.get('/', (req, res) => {
+//   if (req.session.user) {
+//     res.render('displayStuffPage.ejs', { user: req.session.user}); // Render EJS template with user details
+//   } else {
+//     res.render('displayStuffPage.ejs', { user: null }); // Render template with no user details
+//   }
+// });
 //This route is used to diplay any sort of error.
 // router.get('/errorDisplay',(req,res)=>{
 //   const message = req.query.message || req.session.message || null;
@@ -53,9 +53,9 @@ router.get('/', (req, res) => {
 //     res.render('login.ejs', { message });
 // })
 
-router.get('/login', (req, res) => {
-  res.redirect('/login');
-});
+// router.get('/login', (req, res) => {
+//   res.redirect('/login');
+// });
 
 
 // This route is used to give permission to doctor to access patient's files as soon as he (doctor) logs in.
@@ -94,29 +94,53 @@ router.get('/login', (req, res) => {
 //   }
 // });
 
+// router.post('/upload',authenticate, userController.uploadDocument);
+
+
+
+
+// After a civilian logs in, this route is used to display the document access page
+// router.get('/documentAccess', authenticate, (req, res) => {
+//   if(req.session.role === "Civilian"){
+//     const message = req.query.message || req.session.message || null;
+//     req.session.message = null; // Clear the session message after use
+//     res.render('documentAccessPage.ejs',{ message });
+//   }
+//   else{
+//     res.status(403).send('Invalid Access'); // Return status code 403 and message
+//   }
+// });
+
+
+router.get('/', (req, res) => {
+  if (req.session.user) {
+    res.render('displayStuffPage.ejs', { user: req.session.user}); // Render EJS template with user details
+  } else {
+    res.render('displayStuffPage.ejs', { user: null }); // Render template with no user details
+  }
+});
+
+
+router.get('/login', (req, res) => {
+  res.redirect('/login');
+});
+
+
+router.get('/documents/:fileId/view',authenticate,userController.documentFetch);
+
+router.get("/documentsInfoFetch",authenticate,userController.documentsInfoFetch);
+
+router.get('/hospital-resources', authenticate, userController.getHospitalResources);
+
+router.post('/hospital-resources', authenticate, userController.saveOrUpdateHospitalResources);
+
+router.delete('/hospital-resources/:id', authenticate, userController.deleteHospitalResource);
+
 const storage = multer.memoryStorage(); // Store files in memory for now
 const upload = multer({ storage });
 
 router.post('/upload',authenticate,upload.fields([{ name: 'prescriptionFiles', maxCount: 10 },{ name: 'testResultFiles', maxCount: 10 }]),userController.uploadDocument);
 
-// router.post('/upload',authenticate, userController.uploadDocument);
-
-// After a civilian logs in, this route is used to display the document access page
-router.get('/documentAccess', authenticate, (req, res) => {
-  if(req.session.role === "Civilian"){
-    const message = req.query.message || req.session.message || null;
-      req.session.message = null; // Clear the session message after use
-  res.render('documentAccessPage.ejs',{ message });
-  }
-  else{
-    res.status(403).send('Invalid Access'); // Return status code 403 and message
-  }
-});
-
-router.get('/documents/:fileId/view',authenticate,userController.documentFetch);
-
-router.get("/documentsInfoFetch",authenticate,userController.documentsInfoFetch);
-  
 router.post('/logoutUser', authenticate, userController.logoutUser);
 
 router.post("/generate-otp",authenticate,userController.sendOtpMessage);
