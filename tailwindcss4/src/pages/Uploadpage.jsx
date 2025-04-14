@@ -96,8 +96,14 @@ function Uploadpage() {
         setShowForm(false);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        // Redirect to login if unauthorized
+        alert("Session expired. Please login again.");
+        window.location.href = '/login'
+    }else{
       console.error('Error uploading data:', error);
       alert('Failed to upload data. Please try again.');
+    }
     } finally {
       setIsSubmitting(false);
     }

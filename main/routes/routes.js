@@ -125,6 +125,9 @@ router.get('/login', (req, res) => {
   res.redirect('/login');
 });
 
+router.get('/profile',authenticate,userController.getProfile);
+
+router.get('/api/status',userController.checkAuthStatus);
 
 router.get('/documents/:fileId/view',authenticate,userController.documentFetch);
 
@@ -141,7 +144,7 @@ const upload = multer({ storage });
 
 router.post('/upload',authenticate,upload.fields([{ name: 'prescriptionFiles', maxCount: 10 },{ name: 'testResultFiles', maxCount: 10 }]),userController.uploadDocument);
 
-router.post('/logoutUser', authenticate, userController.logoutUser);
+router.post('/logout', authenticate, userController.logoutUser);
 
 router.post("/generate-otp",authenticate,userController.sendOtpMessage);
 

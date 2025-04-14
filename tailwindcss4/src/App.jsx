@@ -16,7 +16,7 @@ import Uploadpage from './pages/Uploadpage';
 import Resourcepage from './pages/Resourcepage';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from './pages/Dashboard';
-
+import Profile from './pages/Profile';
 
  const App = () => {
 
@@ -32,6 +32,7 @@ import Dashboard from './pages/Dashboard';
         <Route path="/upload" element={<Uploadpage />} />
         <Route path="/resources" element={<Resourcepage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
       </>
     

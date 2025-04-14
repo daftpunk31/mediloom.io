@@ -28,7 +28,14 @@ function Resourcepage() {
       
     } catch (error) {
       console.error("Error fetching resources:", error);
-      setErrorMessage("Failed to fetch resources.");
+      if (error.response && error.response.status === 401) {
+        // Redirect to login if unauthorized
+        alert("Session expired. Please login again.");
+        window.location.href = '/login'
+    } else {
+        alert('Failed to fetch user details. Please try again later.')
+        setErrorMessage("Failed to fetch resources.");
+    }
     }
   };
 
@@ -99,8 +106,28 @@ function Resourcepage() {
             <form onSubmit={handleSubmit}>
               {resources.map((resource, index) => (
                 <div key={index} className="p-4 bg-white/10 backdrop-blur-md rounded-lg shadow-md hover:bg-opacity-80 transition-all mt-4 flex flex-col">
-                  <label className="flex justify-between items-center">
+
+<label className="flex justify-between items-center">
+  Resource Name:
+  
+  <select
+    name="resourceName"
+    value={resource.resourceName}
+    onChange={(e) => handleChange(index, e)}
+    required
+    className="form-control text-white border-1 bg-transparent"
+  >
+    <option value="" disabled>Select Resource</option>
+    <option value="Beds">Beds</option>
+    <option value="Ventilators">Ventilators</option>
+    <option value="Mobility Vehicles">Mobility Vehicles</option>
+    <option value="Nurses">Nurses</option>
+  </select>
+</label>
+
+                  {/* <label className="flex justify-between items-center">
                     Resource Name:
+                    
                     <input
                       type="text"
                       name="resourceName"
@@ -109,7 +136,8 @@ function Resourcepage() {
                       required
                       className="form-control text-white border-1"
                     />
-                  </label>
+                    </label> */}
+                  
 
                   <label className="flex justify-between items-center mt-4">
                     Quantity:

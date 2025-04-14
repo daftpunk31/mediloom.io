@@ -141,13 +141,13 @@ export const logoutUser = async (req, res) => {
         req.session.destroy((err) => {
             if (err) {
                 req.session.message = "Error logging out. Don't worry your session will expire automatically in 30 mins";
-            return res.redirect('/errorDisplay');
+            return res.status(500).json({ success: false, message: 'Error logging out' });
             }
             // Clear the session cookie
             res.clearCookie('sessionID'); // Use the same name as in your session configuration
 
             // Redirect to login page or send a success response
-            res.redirect('/loginPage'); // Redirect to login page
+            // return res.redirect('/login'); // Redirect to login page
         });
 
 }
@@ -461,4 +461,36 @@ export const getHospitalResources = async (req, res) => {
       res.status(500).json({ success:false, message: 'Failed to delete resource' });
     }
   };
-  
+
+  // profile
+
+  export const getProfile = async (req, res) => {
+    try{
+
+        const aadhar = req.session.user.aadhar;
+        const first_name  = req.session.user.first_name;
+        const role = req.session.user.role;
+        const phone = req.session.user.phone;
+        const email = req.session.user.email;
+        return res.status(200).json({success:true, message: 'User profile fetched successfully', aadhar, first_name, role, phone, email });
+
+    }
+    catch{
+        console.error("Error fetching user profile:", error);
+        return res.status(500).json({ success:false, message: 'Error fetching user profile' });
+
+    }
+  }
+
+    export const checkAuthStatus = async (req, res) => {
+        try {
+            if (req.session.user) {
+                return res.status(200).json({ success:true, message: 'User is authenticated'});
+            } else {
+                return res.status(400).json({ success:false, message: 'User is not authenticated'});
+            }
+        } catch (error) {
+            console.error("Error checking authentication status:", error);
+            return res.status(500).json({ success:false, message: 'Error checking authentication status' });
+        }
+    }

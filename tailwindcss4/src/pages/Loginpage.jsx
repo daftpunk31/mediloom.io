@@ -70,6 +70,9 @@ const Loginpage = () => {
                 if (formData.role === "Doctor/Medical Professional") {
                     window.location.href = `/doctor`;
                 }
+                else if (formData.role === "Hospital Admin"){
+                    window.location.href = `/resources`;
+                }
                 else{
                 window.location.href = `/${formData.role.toLowerCase().replace(/\s+/g, '')}`;
                 }
@@ -77,7 +80,14 @@ const Loginpage = () => {
                 setError(response.data.message || "Login failed");
             }
         } catch (err) {
-            setError(err.response?.data?.message || "An error occurred during login");
+            if (error.response && error.response.status === 401) {
+                // Redirect to login if unauthorized
+                alert("Session expired. Please login again.");
+                window.location.href = '/login'
+            } else {
+                alert('Failed to fetch user details. Please try again later.')
+                setError(err.response?.data?.message || "An error occurred during login");
+            }
         }
     };
 

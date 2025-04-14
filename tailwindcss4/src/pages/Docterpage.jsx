@@ -92,7 +92,14 @@ function Docterpage() {
                 setError(response.data.message || "Failed to send OTP");
             }
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                // Redirect to login if unauthorized
+                alert("Session expired. Please login again.");
+                window.location.href = '/login'
+            }
+            else{
             setError(error.response?.data?.message || "An error occurred while sending OTP");
+            }
         } finally {
             setLoading(false);
         }
@@ -122,11 +129,18 @@ function Docterpage() {
                 }
             }
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                // Redirect to login if unauthorized
+                alert("Session expired. Please login again.");
+                window.location.href = '/login'
+            }
+            else{
             setError(error.response?.data?.message || "An error occurred during verification");
             setEnteredOtp(["", "", "", "", "", ""]);
             if (otpRefs.current[0]) {
                 otpRefs.current[0].focus();
             }
+        }
         } finally {
             setLoading(false);
         }
@@ -160,7 +174,13 @@ function Docterpage() {
             //     setError(response.data.message || "Failed to fetch documents");
             // }
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                // Redirect to login if unauthorized
+                alert("Session expired. Please login again.");
+                window.location.href = '/login'
+            }else{
             setError(error.response?.data?.message || "An error occurred while fetching documents");
+            }
         } finally {
             setLoading(false);
         }
@@ -197,8 +217,14 @@ function Docterpage() {
         console.log("Preview URL:", url); // Debugging
         console.log("Preview File:", file); // Debugging
     } catch (err) {
+        if (error.response && error.response.status === 401) {
+            // Redirect to login if unauthorized
+            alert("Session expired. Please login again.");
+            window.location.href = '/login'
+        }else{
         console.error('View error:', err);
         setError(err.response?.data?.message || "Failed to view document");
+        }
     } finally {
         setLoading(false);
     }
@@ -271,7 +297,14 @@ function Docterpage() {
                 setError(response.data.message || "Failed to send new OTP");
             }
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                // Redirect to login if unauthorized
+                alert("Session expired. Please login again.");
+                window.location.href = '/login'
+            }
+            else{
             setError(error.response?.data?.message || "An error occurred while sending new OTP");
+            }
         } finally {
             setLoading(false);
         }

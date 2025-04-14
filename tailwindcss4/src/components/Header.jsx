@@ -2,13 +2,35 @@ import React, { useState, useEffect, useRef } from 'react';
 import { assets } from '../assets/asserts';
 import { Link } from "react-router-dom";
 import GSAPcomponent from './GSAPcomponent';
+import axios from "axios";
+import config from '../urlConfig.js';
+
 
 const Header = () => {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(window.innerWidth < 1024);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const collapseHeaderItemsRef = useRef(null);
   const collapseBtnRef = useRef(null);
 
   const RESPONSIVE_WIDTH = 1024;
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch(`${config.backendUrl}/api/status`, {
+          withCredentials: true, // important if using cookies/sessions
+        });
+        const data = await response.json();
+        setIsLoggedIn(data.success); // set based on "success" from backend
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsLoggedIn(false);
+      }
+    };
+  
+    checkAuthStatus();
+  }, []);
+  
 
   const onHeaderClickOutside = (e) => {
     if (
@@ -117,17 +139,18 @@ const Header = () => {
           <a className="header-links" href="#"> Home </a>
           <a className="header-links" href="#Aboutus"> About us </a>
           <a className="header-links" href="#Contactus"> Contact us </a>
+          {isLoggedIn && (
+            <a className="header-links" href="/profile"> Profile </a>
+          )}
         </div>
       </div>
       <button
-  className={`bi ${isHeaderCollapsed ? "bi-list absolute" : "bi-x fixed"} right-3 top-3 z-50 text-3xl text-white lg:hidden`}
-  onClick={toggleHeader}
-  aria-label="menu"
-  id="collapse-btn"
-  ref={collapseBtnRef}
-></button>
-
-
+        className={`bi ${isHeaderCollapsed ? "bi-list absolute" : "bi-x fixed"} right-3 top-3 z-50 text-3xl text-white lg:hidden`}
+        onClick={toggleHeader}
+        aria-label="menu"
+        id="collapse-btn"
+        ref={collapseBtnRef}
+      ></button>
     </header>
     </>
   );
