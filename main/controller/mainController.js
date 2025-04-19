@@ -343,7 +343,8 @@ export const documentsInfoFetch = async (req, res) => {
         const filteredRecords = records.map(record => ({
             id: record.record_id,
             type: record.type,
-            name: record.file_name
+            name: record.file_name,
+            file_location: record.file_location,
         }));
         
         return res.status(200).json({ success: true, message: 'Documents fetched successfully', documents: filteredRecords });
