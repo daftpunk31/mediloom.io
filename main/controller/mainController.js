@@ -1,11 +1,19 @@
 import bcrypt from 'bcryptjs';
 import pool from '../postgres_db_config/db.js';
-import fs from 'fs';
+// import fs from 'fs';
 import mime from 'mime';
 import crypto from 'crypto';
 import UserDAO from '../dao/userDAO.js';
 import HospitalDAO from '../dao/hospitalDAO.js';
 import * as whatsappServices from '../api_services/whatsappService.js';
+
+import axios from 'axios';
+import FormData from 'form-data';
+import fs from 'fs/promises'; // promise-based fs in ES Modules
+import dotenv from 'dotenv';
+dotenv.config();
+
+  
 
 export const registerUser = async (req, res) => {
     try {
@@ -392,58 +400,100 @@ export const documentFetch = async (req, res) => {
 };
 
 
+
+
+// ⬆️ Helper function first
+const uploadToIPFS = async (fileBuffer, fileName) => {
+  const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+
+  const formData = new FormData();
+  formData.append('file', fileBuffer, fileName);
+
+  const metadata = JSON.stringify({ name: fileName });
+  formData.append('pinataMetadata', metadata);
+
+  const options = JSON.stringify({ cidVersion: 1 });
+  formData.append('pinataOptions', options);
+
+  const response = await axios.post(url, formData, {
+    maxBodyLength: Infinity,
+    headers: {
+      ...formData.getHeaders(),
+      'pinata_api_key': process.env.PINATA_API_KEY,
+      'pinata_secret_api_key': process.env.PINATA_SECRET_API_KEY,
+    },
+  });
+
+  return response.data.IpfsHash;
+};
+
+// ⬇️ Your main controller after helper function
 export const uploadDocument = async (req, res) => {
-    try {
-      const aadhar = req.session.patient_detials?.aadhar;
-      if (!aadhar) {
-        return res.status(400).json({ success: false, message: 'Patient Aadhar not found in session' });
-      }
-      const hospitalID = req.session.user.hospitalID;
-      if (!hospitalID) {
-        return res.status(400).json({ success: false, message: 'Hospital ID not found in session' });
-      }
-      const doc_id = req.session.user.doc_id;
-        if (!doc_id) {
-            return res.status(400).json({ success: false, message: 'Doctor ID not found in session' });
-        }
-  
-      const uploadDir = '/Users/prakash/Desktop/major_proj/health_records/'; // or any other safe folder
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-  
-      const file_name  = req.body.file_name;
-      const prescriptionFiles = req.files?.prescriptionFiles || [];
-      const testResultFiles = req.files?.testResultFiles || [];
-    //   const safeFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-
-  
-      const allFiles = [...prescriptionFiles, ...testResultFiles];
-      const savePromises = allFiles.map(async (file) => {
-        const safeFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-        // const filePath = `${uploadDir}/${Date.now()}_${safeFileName}`;
-        const filePath = `${uploadDir}/${safeFileName}`;
-
-        await fs.promises.writeFile(filePath, file.buffer);
-  
-        const fileType = prescriptionFiles.includes(file) ? 'Prescription' : 'Report';
-  
-        await UserDAO.saveDocumentMetadata({
-          aadhar,
-          file_location: filePath,
-          file_name: safeFileName,
-          type: fileType,
-          hospitalID,
-          doc_id
-        });
-      });
-  
-      await Promise.all(savePromises);
-  
-      return res.status(200).json({ success: true, message: 'Documents uploaded successfully' });
-    } catch (error) {
-      console.error('Upload error:', error);
-      return res.status(500).json({ success: false, message: 'Error uploading documents' });
+  try {
+    const aadhar = req.session.patient_detials?.aadhar;
+    if (!aadhar) {
+      return res.status(400).json({ success: false, message: 'Patient Aadhar not found in session' });
     }
-  };
+
+    const hospitalID = req.session.user.hospitalID;
+    if (!hospitalID) {
+      return res.status(400).json({ success: false, message: 'Hospital ID not found in session' });
+    }
+
+    const doc_id = req.session.user.doc_id;
+    if (!doc_id) {
+      return res.status(400).json({ success: false, message: 'Doctor ID not found in session' });
+    }
+
+    const uploadDir = '/Users/prakash/Desktop/major_proj/health_records';
+    try {
+      await fs.access(uploadDir);
+    } catch (error) {
+      await fs.mkdir(uploadDir, { recursive: true });
+    }
+
+    const file_name = req.body.file_name;
+    const prescriptionFiles = req.files?.prescriptionFiles || [];
+    const testResultFiles = req.files?.testResultFiles || [];
+    const allFiles = [...prescriptionFiles, ...testResultFiles];
+    let firstUploadedIpfsHash = null; // to store first file's hash
+
+    const savePromises = allFiles.map(async (file,index) => {
+      const safeFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `${uploadDir}/${safeFileName}`;
+
+      await fs.writeFile(filePath, file.buffer);
+
+      const ipfsHash = await uploadToIPFS(file.buffer, safeFileName); // ✅ Now safe to call
+      
+      if (index === 0) {
+        firstUploadedIpfsHash = ipfsHash;
+      }
+
+      const fileType = prescriptionFiles.includes(file) ? 'Prescription' : 'Report';
+
+      await UserDAO.saveDocumentMetadata({
+        aadhar,
+        file_location: `https://ipfs.io/ipfs/${ipfsHash}`,
+        file_name: safeFileName,
+        type: fileType,
+        ipfs_hash: ipfsHash,
+        hospitalID,
+        doc_id,
+      });
+
+      await fs.unlink(filePath);
+    });
+
+    await Promise.all(savePromises);
+
+    return res.status(200).json({ success: true, message: 'Documents uploaded successfully',ipfsHash: firstUploadedIpfsHash });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return res.status(500).json({ success: false, message: 'Error uploading documents' });
+  }
+};
+
   
 
 

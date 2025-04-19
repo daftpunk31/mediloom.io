@@ -29,12 +29,12 @@ const Home = () => {
                     >
                         <span className=""> Welcome to Mediloom.io</span>
                         <br />
-                        <span className="">  Where Security is our first priority for your privacy</span>
+                        <span className="">  Bridging Innovation and Security</span>
                     </div>
                     <div
                         className="reveal-up mt-10 max-w-[450px] p-2 text-center text-gray-300 max-lg:max-w-full"
                     >
-                        The Feature in our application are -
+                        Explore our platfrom today!
                     </div>
 
                     <div

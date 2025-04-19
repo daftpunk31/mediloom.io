@@ -1,11 +1,16 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { id } from "ethers";   // ✅ Directly import id()
 import GSAPcomponent from "../components/GSAPcomponent";
+import { connectContract } from "../blockchain/connectContract.js"; // Adjust the path as necessary
 import Header from "../components/Header";
 import Fotter from "../components/Fotter";
 import axios from "axios";
 import config from '../urlConfig.js';
 
+
 function Uploadpage() {
+  const [contract, setContract] = useState(null);
+  const [documents, setDocuments] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [prescriptionFiles, setPrescriptionFiles] = useState([]);
   const [testResultFiles, setTestResultFiles] = useState([]);
@@ -13,6 +18,14 @@ function Uploadpage() {
   const [formData, setFormData] = useState({
     file_name: '',
   });
+
+  useEffect(() => {
+    async function loadContract() {
+      const connectedContract = await connectContract();
+      setContract(connectedContract);
+    }
+    loadContract();
+  }, []);
 
   // Refs to reset file input
   const prescriptionInputRef = useRef(null);
@@ -57,7 +70,7 @@ function Uploadpage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     try {
       const formDataToSend = new FormData();
       
@@ -65,49 +78,64 @@ function Uploadpage() {
       Object.entries(formData).forEach(([key, value]) => {
         formDataToSend.append(key, value);
       });
-
+  
       // Append prescription files
-      prescriptionFiles.forEach((file, index) => {
+      prescriptionFiles.forEach((file) => {
         formDataToSend.append(`prescriptionFiles`, file);
       });
-
+  
       // Append test result files
-      testResultFiles.forEach((file, index) => {
+      testResultFiles.forEach((file) => {
         formDataToSend.append(`testResultFiles`, file);
       });
-
+  
       // Send data to backend
       const response = await axios.post(`${config.backendUrl}/api/upload`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });
-      
-
+  
       if (response.status === 200) {
         alert('Data uploaded successfully!');
+  
+        // ⬇️ NEW: Get the ipfsHash from backend response
+        const ipfsHash = response.data.ipfsHash; 
+  
+        if (ipfsHash && contract) {
+
+          console.log('Response from server:', response.data);
+          console.log('Received ipfsHash:', response.data.ipfsHash);
+          const bytes32Hash = id(ipfsHash);   // keccak256(ipfsHash)
+          console.log('bytes32Hash to store on blockchain:', bytes32Hash);
+
+          const tx = await contract.storeFileHash(bytes32Hash);
+    await tx.wait();
+          console.log("Transaction hash:", tx.hash);
+          await tx.wait();
+          alert("✅ File hash uploaded to blockchain!");
+        } else {
+          alert('❗ IPFS hash missing or contract not connected.');
+        }
+  
         // Reset form
-        setFormData({
-          file_name: '',
-        });
+        setFormData({ file_name: '' });
         setPrescriptionFiles([]);
         setTestResultFiles([]);
         setShowForm(false);
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        // Redirect to login if unauthorized
         alert("Session expired. Please login again.");
-        window.location.href = '/login'
-    }else{
-      console.error('Error uploading data:', error);
-      alert('Failed to upload data. Please try again.');
-    }
+        window.location.href = '/login';
+      } else {
+        console.error('Error uploading data:', error);
+        alert('Failed to upload data. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <><GSAPcomponent />
@@ -190,7 +218,27 @@ function Uploadpage() {
                   </div>
                 </section>
               </form>
+
+{/* Display uploaded documents here */}
+<div className="mt-8 w-full">
+  {documents.map((doc) => (
+    <div key={doc.id} className="flex flex-col items-center text-white mt-4">
+      <p>{doc.file_name}</p>
+      {doc.ipfs_hash && (
+        <a 
+          href={`https://ipfs.io/ipfs/${doc.ipfs_hash}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-400 underline mt-2"
+        >
+          View on IPFS
+        </a>
+      )}
+    </div>
+  ))}
+</div>
             </div>
+
           </div>
         </section>
         </div>

@@ -121,10 +121,10 @@ class UserDAO {
     return { file_location, file_name, type };
     }
 
-    static async saveDocumentMetadata({ aadhar, file_location, file_name, type, hospitalID, doc_id }) {
+    static async saveDocumentMetadata({ aadhar, file_location, file_name, type, ipfs_hash, hospitalID, doc_id }) {
         await pool.query(
-          'INSERT INTO health_records (aadhar, file_location, file_name, type, hospital_id,doc_id) VALUES ($1, $2, $3, $4, $5, $6)',
-          [aadhar, file_location, file_name, type, hospitalID, doc_id]
+          'INSERT INTO health_records (aadhar, file_location, file_name, type, ipfs_hash, hospital_id,doc_id) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+          [aadhar, file_location, file_name, type, ipfs_hash, hospitalID, doc_id]
         );
       }
 
