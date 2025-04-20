@@ -190,48 +190,33 @@ function Patient() {
     };
 
     const handleView = async (fileId) => {
-        // console.log("File ID:", fileId); // Debugging
-        try {
-            // console.log("File ID:", fileId); // Debugging
-            setLoading(true);
-            const response = await axios.get(`${config.backendUrl}/api/documents/${fileId}/view` ,{
-                withCredentials: true, // Include cookies in the request
-                responseType: 'blob', // Set response type to blob for file download
-
-            });
-            // console.log("View response:", response); // Debugging
-            console.log("View response:", response.data); // Debugging
-            console.log('Response Content-Type:', response.headers['content-type']);
-            // const url = window.URL.createObjectURL(new Blob([response.data]));
-            const url = window.URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] }));
-            
-            const file = files.find(file => String(file.id) === String(fileId));
-            if (!file) {
-                console.error("File not found in the files array");
-                setError("File not found");
-                return;
+            try {
+                setLoading(true);
+                const file = files.find(file => String(file.id) === String(fileId));
+                if (!file) {
+                    console.error("File not found in the files array");
+                    setError("File not found");
+                    return;
+                }
+        
+                const url = file.file_location; // e.g., https://ipfs.io/ipfs/<hash>
+        
+                // Fetch content type if needed (optional)
+                const response = await axios.get(url, { responseType: 'blob' });
+                const mimeType = response.headers['content-type'];
+        
+                const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
+        
+                file.type = mimeType;
+                setPreviewUrl(blobUrl);
+                setPreviewFile(file);
+            } catch (err) {
+                console.error("Error viewing file:", err);
+                setError("Failed to view document");
+            } finally {
+                setLoading(false);
             }
-            console.log("Found file:", file); // Debugging
-            // Set the content type based on server response
-            file.type = response.headers['content-type'];
-            setPreviewUrl(url);
-            setPreviewFile(file);
-
-        console.log("Preview URL:", url); // Debugging
-        console.log("Preview File:", file); // Debugging
-    } catch (err) {
-        if (error.response && error.response.status === 401) {
-            // Redirect to login if unauthorized
-            alert("Session expired. Please login again.");
-            window.location.href = '/login'
-        }else{
-        console.error('View error:', err);
-        setError(err.response?.data?.message || "Failed to view document");
-        }
-    } finally {
-        setLoading(false);
-    }
-};
+        };
 
 
     //         console.log("Files array:", files); // Debugging
