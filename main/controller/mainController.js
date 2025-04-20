@@ -351,7 +351,6 @@ export const documentsInfoFetch = async (req, res) => {
             doc_name: doctor?.first_name || "Unknown",
             hospital_id: record.hospital_id,
             hospital_name: hospital?.name || "Unknown",
-            
           };
         })
       );

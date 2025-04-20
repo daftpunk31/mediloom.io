@@ -12,6 +12,7 @@ import { connectContract } from "../blockchain/connectContract";
 
 function Patient() {
     const navigate = useNavigate();
+    const [verifyModalData, setVerifyModalData] = useState(null);
     const [otpGenerated, setOtpGenerated] = useState(false);
     const [enteredOtp, setEnteredOtp] = useState(["", "", "", "", "", ""]);
     const [files, setFiles] = useState([]);
@@ -337,13 +338,14 @@ function Patient() {
             const [exists, uploader, timestamp] = await contract.verifyFile(bytes32Hash);
     
             if (exists) {
-                alert(
-                    `✅ File verified!\n` +
-                    `Uploaded by: ${file.doc_name}\n` +
-                    `Hospital: ${file.hospital_name} (${file.hospital_id})\n` +
-                    `Timestamp: ${new Date(Number(timestamp) * 1000).toLocaleString()}\n`+
-                    `Ethereium wallet address: ${uploader}\n`
-                  );
+                setVerifyModalData({
+                    docName: file.doc_name,
+                    hospitalName: file.hospital_name,
+                    hospitalId: file.hospital_id,
+                    uploader: uploader,
+                    timestamp: new Date(Number(timestamp) * 1000).toLocaleString(),
+                  });
+                  
                 // alert(
                 //     `✅ File verified!\nUploader: ${uploader}\nTimestamp: ${new Date(Number(timestamp) * 1000).toLocaleString()}`
                 // );
@@ -541,6 +543,29 @@ function Patient() {
                     </div>
                 )}
             </section>
+            {verifyModalData && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md text-black relative">
+      <h2 className="text-xl font-bold mb-4 text-green-700">✅ File Verified Using Blockchain!</h2>
+        <p className="text-lg font-semibold">This file's metadata exists securely in the ganache blockchain!</p>
+        <br />
+        <p className="text-lg font-semibold">File Details:</p>
+      <p><strong>Uploaded by (Doctor):</strong> {verifyModalData.docName}</p>
+      <p><strong>Hospital:</strong> {verifyModalData.hospitalName} ({verifyModalData.hospitalId})</p>
+      <p><strong>🔗 Ethereum Wallet Address:</strong> <span className="break-all">{verifyModalData.uploader}</span></p>
+      <p><strong>Timestamp:</strong> {verifyModalData.timestamp}</p>
+
+      <button
+        onClick={() => setVerifyModalData(null)}
+        className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
+
             <Fotter />
         </>
     );
