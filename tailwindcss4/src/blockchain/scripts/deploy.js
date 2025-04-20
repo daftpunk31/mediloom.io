@@ -1,44 +1,31 @@
-const { ethers } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
 async function main() {
   const MediloomFileStorage = await ethers.getContractFactory("MediloomFileStorage");
+  const contract = await MediloomFileStorage.deploy();
+  await contract.waitForDeployment();
 
-  const mediloomFileStorage = await MediloomFileStorage.deploy();
-  await mediloomFileStorage.waitForDeployment();
+  const address = await contract.getAddress();
+  const abi = JSON.parse(MediloomFileStorage.interface.formatJson());
 
-  const contractAddress = await mediloomFileStorage.getAddress();
-  console.log("✅ Contract deployed to:", contractAddress);
+  console.log("✅ Contract deployed to:", address);
 
-  // Correct way to get ABI
-  const contractABI = JSON.parse(MediloomFileStorage.interface.formatJson());
-
-  // Create folder if not exists
+  // Save to deployments folder
   const deploymentsDir = path.join(__dirname, "..", "deployments");
   if (!fs.existsSync(deploymentsDir)) {
     fs.mkdirSync(deploymentsDir);
   }
 
-  // Save deployment info
   const deploymentInfo = {
-    address: contractAddress,
-    abi: contractABI,
+    address,
+    abi,
     deployedAt: new Date().toISOString(),
     network: "localhost"
   };
 
-  fs.writeFileSync(
-    path.join(deploymentsDir, "MediloomFileStorage.json"),
-    JSON.stringify(deploymentInfo, null, 2)
-  );
+  const outputPath = path.join(deploymentsDir, "MediloomFileStorage.json");
+  fs.writeFileSync(outputPath, JSON.stringify(deploymentInfo, null, 2));
 
-  console.log("📄 Deployment info saved to deployments/MediloomFileStorage.json");
+  console.log("📄 Deployment info saved to:", outputPath);
 }
-
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error("❌ Error in deployment:", error);
-    process.exit(1);
-  });

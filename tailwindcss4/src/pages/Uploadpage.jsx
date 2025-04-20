@@ -103,10 +103,14 @@ function Uploadpage() {
   
         if (ipfsHash && contract) {
 
-          console.log('Response from server:', response.data);
-          console.log('Received ipfsHash:', response.data.ipfsHash);
+          // console.log('Response from server:', response.data);
+          // console.log('Received ipfsHash:', response.data.ipfsHash);
           const bytes32Hash = id(ipfsHash);   // keccak256(ipfsHash)
-          console.log('bytes32Hash to store on blockchain:', bytes32Hash);
+          // console.log('bytes32Hash to store on blockchain:', bytes32Hash);
+          
+          console.log("Upload IPFS hash:", ipfsHash);
+          console.log("Upload bytes32 hash:", bytes32Hash);
+
 
           const tx = await contract.storeFileHash(bytes32Hash);
     await tx.wait();

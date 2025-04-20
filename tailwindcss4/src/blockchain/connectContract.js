@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import contractData from "../deployments/MediloomFileStorage.json";
+import contractData from "../blockchain/deployments/MediloomFileStorage.json";
 
 const PRIVATE_KEY = "0x8be89c15ee6ce407137104b624440d4f1dea5e276539aab098c8aa013bfbc5e0"; // 🔐 From Ganache
 const GANACHE_RPC = "http://127.0.0.1:7545"; // Ganache default
@@ -14,6 +14,7 @@ export async function connectContract() {
       contractData.abi,
       signer
     );
+    console.log("🔗 Using contract address:", contractData.address);
 
     console.log("✅ Connected to contract with direct signer");
     return contract;

@@ -1,5 +1,5 @@
 {
-  "address": "0xA3CC18825311c45865080948cd018DdFEe8aC5D4",
+  "address": "0xA705Fa9e1bdadEa27c304C4d4f6BEC300C25Deab",
   "abi": [
     {
       "type": "event",
@@ -87,6 +87,6 @@
       ]
     }
   ],
-  "deployedAt": "2025-04-17T15:06:16.076Z",
+  "deployedAt": "2025-04-20T04:08:57.996Z",
   "network": "localhost"
 }

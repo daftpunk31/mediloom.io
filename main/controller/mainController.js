@@ -334,27 +334,41 @@ export const verifyOtp = async (req, res) => {
 
 export const documentsInfoFetch = async (req, res) => {
     try {
-        const patientAadhar = req.session.patient_detials.aadhar;
-
-        const records = await UserDAO.fetchDocumentsINFObyAadhar(patientAadhar);
-
-        // console.log('Files', records);
-
-        const filteredRecords = records.map(record => ({
+      const patientAadhar = req.session.patient_detials.aadhar;
+      const records = await UserDAO.fetchDocumentsINFObyAadhar(patientAadhar);
+  
+      const enrichedRecords = await Promise.all(
+        records.map(async (record) => {
+          const doctor = await UserDAO.getDoctorById(record.doc_id);
+          const hospital = await HospitalDAO.getHospitalById(record.hospital_id);
+  
+          return {
             id: record.record_id,
             type: record.type,
             name: record.file_name,
             file_location: record.file_location,
-        }));
-        
-        return res.status(200).json({ success: true, message: 'Documents fetched successfully', documents: filteredRecords });
+            doc_id: record.doc_id,
+            doc_name: doctor?.first_name || "Unknown",
+            hospital_id: record.hospital_id,
+            hospital_name: hospital?.name || "Unknown",
+            
+          };
+        })
+      );
+  
+      return res.status(200).json({
+        success: true,
+        message: 'Documents fetched successfully',
+        documents: enrichedRecords,
+      });
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error fetching documents',
+      });
     }
-    catch (error) {
-        console.error("Error fetching documents:", error);
-        return res.status(500).json({ success: false, message: 'Error fetching documents' });
-
-    }
-}
+  };
 
 
 export const documentFetch = async (req, res) => {

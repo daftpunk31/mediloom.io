@@ -41,6 +41,12 @@ class HospitalDAO {
   static async deleteResourceById(id) {
     await pool.query('DELETE FROM hospital_resources WHERE id = $1', [id]);
   }
+
+  static async getHospitalById(hospital_id) {
+    const result = await pool.query('SELECT name FROM hospitals WHERE hospital_id = $1', [hospital_id]);
+    return result.rows[0];
+  }
+  
 }
 
 export default HospitalDAO;

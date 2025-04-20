@@ -171,6 +171,12 @@ class UserDAO {
     );
     }
 
+    static async getDoctorById(doc_id) {
+        const result = await pool.query('SELECT first_name FROM doctors WHERE doc_id = $1', [doc_id]);
+        return result.rows[0];
+      }
+      
+
 }
 
 export default UserDAO;
