@@ -28,7 +28,7 @@
 
 ## 📦 Tech Stack
 
-- **Frontend:** HTML, CSS, JavaScript, EJS  
+- **Frontend:** React, HTML, CSS, JavaScript, EJS  
 - **Backend:** Node.js, Express.js  
 - **Database:** PostgreSQL  
 - **Real-Time Data:** Apache Kafka  
